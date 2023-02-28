@@ -45,10 +45,44 @@ void printDigraph(DIGRAPH *g){
     }
 }
 
+void it(double **ptr, DIGRAPH *g){
+    // return s(k+1) from s(k)
+    double *s = *ptr;
+    double *res = (double*)malloc(g->n * sizeof(double));
+    for (int i = 0; i < g->n; i++) {
+        res[i] = 0.0;
+    }
+    
+    for (int i = 0; i < g->n; i++) {
+        for (int j = 0; j < g->nbSucc[i]; j++) {
+            res[g->succ[i][j]] += 1.0 * s[i] / g->nbSucc[i];
+        }
+    }
+    
+    *ptr = res;
+}
+
 int main(){
     FILE* fp  = fopen("exemple1.txt", "r");
     DIGRAPH* g = readDigraph(fp);
     fclose(fp);
-    printDigraph(g);
+    double *s = (double*)malloc(g->n * sizeof(double));
+    
+    printf("s0 = ");
+    for (int i = 0; i < g->n; i++) {
+        s[i] = 1.0 / g->n;
+        printf("%lf  ", s[i]);
+    }
+    printf("\n");
+
+    //printDigraph(g);
+    for (int t = 1; t < 5; t++) {
+        it(&s, g);
+        printf("s%d = ", t);
+        for (int i = 0; i < g->n; i++) {
+            printf("%lf  ", s[i]);
+        }  
+        printf("\n");
+    }
     return 0;
 }
