@@ -1,0 +1,177 @@
+
+
+Elements de solution TD MongoDB 3IF
+
+===========================================================================
+1. db.velov_geo.find({"properties.commune":"VILLEURBANNE"}).pretty();
+
+db.velov_geo.find({"properties.commune":{$eq:"VILLEURBANNE"}})
+
+1.bis, avec projection en plus sur le nom et la commune
+
+db.velov_geo.find(
+					{"properties.commune":"VILLEURBANNE"},
+					   {"properties.name": 1, "properties.commune":1, _id:0}
+			     );
+
+===========================================================================
+2. db.velov_geo.find({"properties.commune":{$ne:"VILLEURBANNE"}}).count();
+cela compte les documents. 
+===========================================================================
+3:
+db.velov_geo.find(
+	{"properties.address2":""
+	});
+===========================================================================	
+4:
+db.velov_geo.find({"properties.address2":{$ne:""}}).count()
+===========================================================================	
+5.
+db.velov_geo.find({"properties.available_bikes":{$gt:2}});
+===========================================================================
+6.
+db.velov_geo.distinct("properties.commune");
+db.velov_geo.aggregate([ { $group: {_id:"$properties.commune"} }])
+===========================================================================
+7.
+db.velov_geo.distinct("properties.commune").sort(); 
+
+Dsitinct retourne un tableau JSon et le  tri s'applique dessus, il ne peut pas utiliser des index et n'est pas très efficace!!
+
+pour trier en ordre inverse, il faut utiliser :
+
+db.velov_geo.distinct("properties.commune").sort().reverse()
+
+Si vous utilisez :
+db.velov_geo.distinct("properties.commune").reverse()
+il inverse simplement l'ordre "naturel" des valeurs, ne les trie pas.
+
+
+(avec aggregate)
+db.velov_geo.aggregate([
+                       {$group:{_id:"$properties.commune"}},
+                       {$sort:{"_id":1}}
+                       ])
+===========================================================================
+8.
+db.velov_geo.find({"properties.commune":"Lyon 9 ème"},
+				  {"properties.available_bikes":1}).sort(
+				  {"properties.available_bikes":1});
+
+===========================================================================
+9.
+db.velov_geo.find(
+	{"properties.commune":"Lyon 9 ème"},
+	{"properties.name":1,
+	 "properties.address":1,
+	 "properties.available_bikes":1,
+	 "_id":0}
+	 ).
+     sort({"properties.available_bikes":1}).
+	 pretty();
+
+===========================================================================
+10.
+db.velov_geo.aggregate(
+[
+{$group:{_id:"$properties.commune", nb_stations : {$sum:1}}}
+]
+);
+===========================================================================
+11.
+db.velov_geo.aggregate(
+[
+{$group:{_id:"$properties.commune", nb_stations : {$sum:1}}},
+{$sort:{"_id":1}}
+]
+);
+===========================================================================
+12.
+db.velov_geo.aggregate(
+[
+{$group:{_id:"$properties.commune", nb_stations : {$sum:1}}},
+{$sort:{"nb_stations":-1}}
+]
+);
+===========================================================================
+13.
+db.velov_geo.aggregate(
+[
+{$match:{"properties.commune":"VILLEURBANNE"}},
+{$group:{_id:"$properties.available_bikes", nb_stations : {$sum:1}}},
+{$sort:{"nb_stations":-1}}
+]
+);
+===========================================================================
+14.
+db.velov_geo.aggregate(
+[
+{$match:{"properties.commune":"VILLEURBANNE"}},
+{$group:{_id:"$properties.available_bikes", noms : {$push:"$properties.name"}}}
+]
+);
+
+
+db.velov_geo.aggregate([
+			{$match:{"properties.commune":"VILLEURBANNE"}},
+			{$group:{_id:"$properties.available_bikes", nb_stations:{$sum:1}, noms_des_stations:{$push:"$properties.name"}}},
+			{$sort:{"nb_stations":-1}}
+])
+===========================================================================
+15.	Calculer le nombre moyen de vélos disponibles par commune
+
+db.velov_geo.aggregate(
+	[
+		{
+			$group: {
+			_id:{commune:"$properties.commune"}, moyenne : { $avg : "$properties.available_bikes"}
+			}
+		},
+	]
+);
+===========================================================================
+16.	Chercher les stations Vélo’V qui sont à moins de 500m du point : $geometry: { type: "Point",  coordinates: [ 4.863132722360224, 45.77022676914935 ] }
+
+
+db.velov_geo.find({
+"geometry.coordinates":{
+$near: {
+            $geometry: { type: "Point",  coordinates: [ 4.863132722360224, 45.77022676914935 ] },
+            $minDistance: 0,
+            $maxDistance: 500
+          }}
+})
+===========================================================================
+
+17.	Listez les 5 stations les plus proches des coordonnées type : "Point",  coordinates: [ 4.863132722360224, 45.77022676914935 ] } (utilisez : geoNear)
+db.runCommand(
+   {
+     geoNear: "velov_geo",
+     near: { type: "Point",  coordinates: [ 4.863132722360224, 45.77022676914935 ]},
+     spherical: true,
+     num: 5
+ 
+   }
+)
+
+Ou
+db.velov_geo.aggregate(
+	[
+		{
+			$geoNear: {
+			        near: { type: "Point",  coordinates: [ 4.863132722360224, 45.77022676914935 ]},
+			        distanceField: "geometry",
+			        num: 5,
+			        spherical: true
+			}
+		},
+
+	]
+);
+
+===========================================================================
+18.	Cherchez les stations dont le pole répond à la requête  « quartiers »
+db.velov_geo.find( { $text: { $search: "quartiers" } },{"properties.pole":1} )
+
+
+
