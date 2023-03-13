@@ -5,8 +5,10 @@
 
 int main(int argc, char** argv)
 {
-    int ret = fork();
-    char* reboursLength = (ret==0 ? "4" : "2");
-    execl("./rebours","./rebours",reboursLength,NULL);
+    fork();
+    if(fork()){
+        fork();
+    }
+    printf("PID: %d, Parent PID:%d\n",getpid(),getppid());
     return EXIT_SUCCESS;
 }

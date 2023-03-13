@@ -15,6 +15,9 @@ rebours: rebours.c
 fourche: fourche.c
 	gcc -g -Wall -Werror -o fourche fourche.c
 
+fourche2: fourche2.c
+	gcc -g -Wall -Werror -o fourche2 fourche2.c
+
 doublerebours: doublerebours.c
 	gcc -g -Wall -Werror -o doublerebours   doublerebours.c 
 

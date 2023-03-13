@@ -7,22 +7,18 @@
 
 int main(int argc, char** argv)
 {
-    assert(argc>=4);
-    int N = argc - 3;
+    assert(argc>=3);
+    int N = argc - 2;
     char* prog = argv[1];
-    int maxProcess = atoi(argv[2]);
     int i;
     int ret;
     for (i=0;i<N;i++){
-        if (i>=maxProcess){
-            wait(NULL);
-        }
         ret = fork();
         if (ret == 0){
-            execl(prog,prog,argv[3+i],NULL);
+            execl(prog,prog,argv[2+i],NULL);
         }
     }
-    for (i=0;i<maxProcess;i++){
+    for (i=0;i<N;i++){
         wait(NULL);
     }
     return EXIT_SUCCESS;
